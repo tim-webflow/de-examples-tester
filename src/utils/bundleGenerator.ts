@@ -43,6 +43,27 @@ export function parseTopLevelFunctions(code: string): ParsedFunction[] {
       })
     }
   }
+
+  // If no functions found, check if the code is an IIFE — treat the whole
+  // thing as a single "run" action.
+  if (functions.length === 0) {
+    for (const node of ast.body) {
+      const expr = (node as any).expression
+      if (
+        node.type === 'ExpressionStatement' &&
+        expr?.type === 'CallExpression' &&
+        (expr.callee?.type === 'FunctionExpression' ||
+          expr.callee?.type === 'ArrowFunctionExpression')
+      ) {
+        functions.push({
+          name: 'run',
+          code: code,
+        })
+        break
+      }
+    }
+  }
+
   return functions
 }
 
